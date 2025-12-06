@@ -28,29 +28,29 @@ class RuleComparison:
         task_config_path: str = "task_config.json",
     ):
         """
-        初始化规则对比类
+        Initialize rule comparison class
         
-        :param test_model: 测试模型名称
-        :param test_base_url: 测试模型的 API base URL
-        :param test_api_key: 测试模型的 API key
-        :param base_model: 基准模型名称
-        :param base_base_url: 基准模型的 API base URL
-        :param base_api_key: 基准模型的 API key
-        :param max_workers: 并行处理的最大线程数
-        :param test_temperature: 测试模型的温度参数
-        :param base_temperature: 基准模型的温度参数
-        :param timeout: 每次请求的超时时间（秒）
-        :param max_retries: 最大重试次数
-        :param retry_delay: 重试间隔时间（秒）
-        :param task_config_path: 任务配置文件路径
+        :param test_model: Test model name
+        :param test_base_url: Test model API base URL
+        :param test_api_key: Test model API key
+        :param base_model: Base model name
+        :param base_base_url: Base model API base URL
+        :param base_api_key: Base model API key
+        :param max_workers: Maximum number of parallel threads
+        :param test_temperature: Test model temperature parameter
+        :param base_temperature: Base model temperature parameter
+        :param timeout: Timeout for each request (seconds)
+        :param max_retries: Maximum number of retries
+        :param retry_delay: Retry delay (seconds)
+        :param task_config_path: Task configuration file path
         """
-        # 初始化测试模型客户端
+        # Initialize test model client
         self.test_client = OpenAI(
             base_url=test_base_url,
             api_key=test_api_key
         )
         
-        # 初始化基准模型客户端
+        # Initialize base model client
         self.base_client = OpenAI(
             base_url=base_base_url,
             api_key=base_api_key
@@ -65,17 +65,17 @@ class RuleComparison:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         
-        # 加载任务配置
+        # Load task configuration
         with open(task_config_path, 'r') as f:
             self.task_config = json.load(f)
 
     def _safe_request_with_retry(self, prompt: str, role: str):
         """
-        带重试机制的安全请求方法
+        Safe request method with retry mechanism
         
-        :param prompt: 提示词
-        :param role: 角色，'test' 或 'base'
-        :return: API 响应
+        :param prompt: Prompt text
+        :param role: Role, 'test' or 'base'
+        :return: API response
         """
         last_error = None
         for attempt in range(1, self.max_retries + 1):
@@ -101,15 +101,15 @@ class RuleComparison:
                     raise ValueError(f"Invalid role: {role}")
             except Exception as e:
                 last_error = e
-                print(f"⚠️  第 {attempt}/{self.max_retries} 次请求失败：{e}")
+                print(f"⚠️  Attempt {attempt}/{self.max_retries} failed: {e}")
                 if attempt < self.max_retries:
                     time.sleep(self.retry_delay)
         
-        # 如果所有尝试都失败
-        raise Exception(f"请求在重试 {self.max_retries} 次后仍失败: {last_error}")
+        # If all attempts failed
+        raise Exception(f"Request failed after {self.max_retries} retries: {last_error}")
 
     def _remove_think_tag(self, text: str):
-        """移除 <think> 标签内容"""
+        """Remove <think> tag content"""
         think_end_tag = "</think>"
         if think_end_tag in text:
             text = text.split(think_end_tag, 1)[1].strip()
@@ -124,14 +124,14 @@ class RuleComparison:
         error_type: str
     ):
         """
-        使用 LLM 比较两个规则
+        Compare two rules using LLM
         
-        :param official_explanation: 官方解释
-        :param description: 描述
-        :param official_rule: 官方规则
-        :param generated_rule: 生成的规则
-        :param error_type: 错误类型
-        :return: 比较结果字典
+        :param official_explanation: Official explanation
+        :param description: Description
+        :param official_rule: Official rule
+        :param generated_rule: Generated rule
+        :param error_type: Error type
+        :return: Comparison result dictionary
         """
         if error_type in self.task_config.keys():
             error_detail = self.task_config[error_type]
@@ -160,7 +160,7 @@ class RuleComparison:
             if "```json" in compare_output:
                 compare_output = compare_output.split("```json")[1].split("```")[0].strip()
             
-            # 尝试解析 JSON 结果
+            # Try to parse JSON result
             try:
                 compare_dict = json.loads(compare_output)
             except json.JSONDecodeError:
@@ -185,7 +185,7 @@ class RuleComparison:
                 except Exception as e:
                     compare_dict["explanation_judge"] = f"ERROR: {type(e).__name__}: {str(e)}"
 
-            # 记录 weaker_rule 对应
+            # Record weaker_rule correspondence
             weaker_rule = compare_dict.get("weaker_rule")
             if weaker_rule == "version_1":
                 compare_dict["weaker_version"] = rules[0][0]
@@ -203,7 +203,7 @@ class RuleComparison:
         return compare_dict
 
     def compare_rule(self, item: dict, error_type: str):
-        """比较单个规则"""
+        """Compare a single rule"""
         description = item.get("description", "")
         official_rule = item.get("official_rule", "")
         generated_rule = item.get("generated_rule", "")
@@ -217,7 +217,7 @@ class RuleComparison:
         )
 
     def compare_batch_rules(self, items: List[dict], error_type: str):
-        """批量比较规则"""
+        """Compare rules in batch"""
         results = []
         indexed_items = [(index, item) for index, item in enumerate(items)]
         
@@ -259,30 +259,30 @@ def run_comparison(
     retry_delay: int = 30,
 ):
     """
-    运行规则对比实验
+    Run rule comparison experiment
     
-    :param test_model: 测试模型名称
-    :param test_base_url: 测试模型 API URL
-    :param test_api_key: 测试模型 API key
-    :param base_model: 基准模型名称
-    :param base_base_url: 基准模型 API URL
-    :param base_api_key: 基准模型 API key
-    :param rule_language: 规则语言
-    :param test_num: 测试数量
-    :param max_workers: 最大并行工作线程数
-    :param test_temperature: 测试模型温度
-    :param base_temperature: 基准模型温度
-    :param timeout: 请求超时时间
-    :param max_retries: 最大重试次数
-    :param retry_delay: 重试延迟
+    :param test_model: Test model name
+    :param test_base_url: Test model API URL
+    :param test_api_key: Test model API key
+    :param base_model: Base model name
+    :param base_base_url: Base model API URL
+    :param base_api_key: Base model API key
+    :param rule_language: Rule language
+    :param test_num: Test number
+    :param max_workers: Maximum number of parallel worker threads
+    :param test_temperature: Test model temperature
+    :param base_temperature: Base model temperature
+    :param timeout: Request timeout
+    :param max_retries: Maximum number of retries
+    :param retry_delay: Retry delay
     """
     input_file = f"./dataset/{rule_language}_detections_error.json"
     output_file = f"./result/{rule_language}_{test_model}_{base_model}_{test_num}_error.json"
     
     if not os.path.exists(input_file):
-        raise FileNotFoundError(f"❌ 文件未找到: {input_file}")
+        raise FileNotFoundError(f"❌ File not found: {input_file}")
     if os.path.exists(output_file):
-        raise FileExistsError(f"❌ 文件已存在: {output_file}")
+        raise FileExistsError(f"❌ File already exists: {output_file}")
     
     with open(input_file, "r", encoding="utf-8") as f:
         generated_dataset = json.load(f)
@@ -319,31 +319,31 @@ def run_comparison(
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=4, ensure_ascii=False)
 
-    print(f"\n✅ 已完成所有规则生成，结果已保存到：{output_file}")
+    print(f"\n✅ All rule generation completed, results saved to: {output_file}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="运行规则对比实验")
+    parser = argparse.ArgumentParser(description="Run rule comparison experiment")
     
-    # 测试模型参数
-    parser.add_argument("--test_model", type=str, required=True, help="测试模型名称")
-    parser.add_argument("--test_base_url", type=str, required=True, help="测试模型 API base URL")
-    parser.add_argument("--test_api_key", type=str, required=True, help="测试模型 API key")
+    # Test model parameters
+    parser.add_argument("--test_model", type=str, required=True, help="Test model name")
+    parser.add_argument("--test_base_url", type=str, required=True, help="Test model API base URL")
+    parser.add_argument("--test_api_key", type=str, required=True, help="Test model API key")
     
-    # 基准模型参数
-    parser.add_argument("--base_model", type=str, required=True, help="基准模型名称")
-    parser.add_argument("--base_base_url", type=str, required=True, help="基准模型 API base URL")
-    parser.add_argument("--base_api_key", type=str, required=True, help="基准模型 API key")
+    # Base model parameters
+    parser.add_argument("--base_model", type=str, required=True, help="Base model name")
+    parser.add_argument("--base_base_url", type=str, required=True, help="Base model API base URL")
+    parser.add_argument("--base_api_key", type=str, required=True, help="Base model API key")
     
-    # 其他参数
-    parser.add_argument("--rule_language", type=str, required=True, help="规则语言 支持 snort es splunk")
-    parser.add_argument("--test_num", type=int, default=10, help="测试数量")
-    parser.add_argument("--max_workers", type=int, default=100, help="最大并行工作线程数")
-    parser.add_argument("--test_temperature", type=float, default=1.0, help="测试模型温度参数")
-    parser.add_argument("--base_temperature", type=float, default=1.0, help="基准模型温度参数")
-    parser.add_argument("--timeout", type=int, default=600, help="请求超时时间（秒）")
-    parser.add_argument("--max_retries", type=int, default=3, help="最大重试次数")
-    parser.add_argument("--retry_delay", type=int, default=30, help="重试延迟（秒）")
+    # Other parameters
+    parser.add_argument("--rule_language", type=str, required=True, help="Rule language, supports snort, es, splunk")
+    parser.add_argument("--test_num", type=int, default=10, help="Test number")
+    parser.add_argument("--max_workers", type=int, default=100, help="Maximum number of parallel worker threads")
+    parser.add_argument("--test_temperature", type=float, default=1.0, help="Test model temperature parameter")
+    parser.add_argument("--base_temperature", type=float, default=1.0, help="Base model temperature parameter")
+    parser.add_argument("--timeout", type=int, default=600, help="Request timeout (seconds)")
+    parser.add_argument("--max_retries", type=int, default=3, help="Maximum number of retries")
+    parser.add_argument("--retry_delay", type=int, default=30, help="Retry delay (seconds)")
 
     args = parser.parse_args()
 
