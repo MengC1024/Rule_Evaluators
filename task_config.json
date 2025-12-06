@@ -1,0 +1,14 @@
+{
+  "mapping_error": {
+    "intent_drift": "Deviation from the specified detection objective, resulting in detection of unintended behaviors.",
+    "target_mismatch": "Incorrect specification of data source, entity, or object type for the intended detection.",
+    "coverage_loss": "Omission of essential conditions that reduce true positive detection coverage.",
+    "field_confusion": "Incorrect field or attribute specification that alters the semantic meaning of the logic.",
+    "scope_drift": "Unintended modification of match criteria that changes the detection scope."
+  },
+  "rule_error": {
+    "logic_fault": "Structural defects in logical composition leading to incorrect evaluation outcomes.",
+    "filter_design_fault": "Improper filter or condition design causing elevated false positive or false negative rates.",
+    "correlation_fault": "Misconfiguration of multi-event correlation affecting temporal, sequential, or state relationships."
+  }
+}
