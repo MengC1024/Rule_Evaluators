@@ -12,7 +12,7 @@ Can Large Language Models Evaluate Cybersecurity Detection Rules? Framework and 
 
 to be more reproducible, so it will continuous update.
 
-However, this version is still the stable version, and can be run to verify our work, the large update will be updated together before 2025.12.30, the future version will be easier to use.
+However, this version is still the stable version, and can be run to verify our work, the large update will be updated together before 2025.3.1, the future version will be easier to use.
 
 ## Usage
 
