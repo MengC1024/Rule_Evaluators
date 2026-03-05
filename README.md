@@ -8,12 +8,6 @@ This is the official code of:
 
 Can Large Language Models Evaluate Cybersecurity Detection Rules? Framework and Empirical Analysis
 
-## Future version
-
-to be more reproducible, so it will continuous update.
-
-However, this version is still the stable version, and can be run to verify our work, the large update will be updated together before 2025.3.1, the future version will be easier to use.
-
 ## Usage
 
 You can run it like:
